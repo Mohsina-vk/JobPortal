@@ -1,0 +1,110 @@
+@model JobPortal.Models.ViewModels.SeekerDashboardViewModel
+@{
+  ViewData["Title"] = "My Dashboard";
+}
+
+<section class="section">
+  <div class="container">
+    <!-- Welcome -->
+    <div class="page-header">
+      <h1>👋 Welcome back, @Model.User.FullName!</h1>
+      <p>Track your job applications and discover new opportunities.</p>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem">
+      <div class="stat-card">
+        <div class="stat-card-icon purple">📋</div>
+        <div>
+          <div class="stat-card-value">@Model.TotalApplications</div>
+          <div class="stat-card-label">Total Applied</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon orange">⏳</div>
+        <div>
+          <div class="stat-card-value">@Model.PendingCount</div>
+          <div class="stat-card-label">Pending</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon blue">⭐</div>
+        <div>
+          <div class="stat-card-value">@Model.ShortlistedCount</div>
+          <div class="stat-card-label">Shortlisted</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon green">✅</div>
+        <div>
+          <div class="stat-card-value">@Model.AcceptedCount</div>
+          <div class="stat-card-label">Accepted</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon red">❌</div>
+        <div>
+          <div class="stat-card-value">@Model.RejectedCount</div>
+          <div class="stat-card-label">Rejected</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem">
+      <a asp-controller="Jobs" asp-action="Index" class="btn btn-primary">🔍 Browse Jobs</a>
+      <a asp-controller="Dashboard" asp-action="MyApplications" class="btn btn-outline">📋 All Applications</a>
+    </div>
+
+    <!-- Recent Applications -->
+    <div class="flex-between mb-2">
+      <h2 style="font-size:1.1rem;font-weight:700">Recent Applications</h2>
+      <a asp-controller="Dashboard" asp-action="MyApplications" style="font-size:0.85rem;color:var(--primary-light)">View all →</a>
+    </div>
+
+    @if (!Model.RecentApplications.Any())
+    {
+      <div class="empty-state">
+        <div class="icon">📭</div>
+        <h3>No applications yet</h3>
+        <p>Start applying to jobs to track them here</p>
+        <a asp-controller="Jobs" asp-action="Index" class="btn btn-primary mt-2">Browse Jobs →</a>
+      </div>
+    }
+    else
+    {
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Job Title</th>
+              <th>Company</th>
+              <th>Applied</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach (var app in Model.RecentApplications)
+            {
+              var statusClass = app.Status switch {
+                JobPortal.Models.ApplicationStatus.Accepted => "badge-accepted",
+                JobPortal.Models.ApplicationStatus.Rejected => "badge-rejected",
+                JobPortal.Models.ApplicationStatus.Shortlisted => "badge-shortlisted",
+                JobPortal.Models.ApplicationStatus.UnderReview => "badge-underreview",
+                _ => "badge-pending"
+              };
+              <tr>
+                <td><strong>@app.Job?.Title</strong></td>
+                <td style="color:var(--text-muted)">@app.Job?.CompanyName</td>
+                <td style="color:var(--text-muted)">@app.AppliedAt.ToString("MMM d, yyyy")</td>
+                <td><span class="badge @statusClass">@app.Status</span></td>
+                <td><a asp-controller="Jobs" asp-action="Detail" asp-route-id="@app.JobId" class="btn btn-outline btn-sm">View</a></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</section>

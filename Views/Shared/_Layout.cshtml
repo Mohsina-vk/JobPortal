@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="JobPortal — Find your dream job or post job opportunities. Connect talent with opportunity." />
+  <title>@(ViewData["Title"] != null ? ViewData["Title"] + " | " : "")JobPortal</title>
+  <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>" />
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+    💼 Job<span class="dot">Portal</span>
+  </a>
+
+  <ul class="navbar-nav">
+    <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+    <li><a asp-controller="Jobs" asp-action="Index">Browse Jobs</a></li>
+    @if (User.IsInRole("Recruiter"))
+    {
+      <li><a asp-controller="Recruiter" asp-action="PostJob">Post a Job</a></li>
+      <li><a asp-controller="Recruiter" asp-action="MyJobs">My Jobs</a></li>
+    }
+    @if (User.IsInRole("JobSeeker"))
+    {
+      <li><a asp-controller="Dashboard" asp-action="MyApplications">My Applications</a></li>
+    }
+  </ul>
+
+  <div class="navbar-actions">
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+      <a asp-controller="Dashboard" asp-action="Index" class="user-chip">
+        <div class="user-avatar">@User.Identity.Name?.Substring(0, 1).ToUpper()</div>
+        <span>@User.Identity.Name?.Split('@')[0]</span>
+        @if (User.IsInRole("Recruiter"))
+        {
+          <span class="role-badge recruiter">Recruiter</span>
+        }
+        else
+        {
+          <span class="role-badge seeker">Seeker</span>
+        }
+      </a>
+      <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-outline btn-sm">Logout</button>
+      </form>
+    }
+    else
+    {
+      <a asp-controller="Account" asp-action="Login" class="btn btn-outline btn-sm">Login</a>
+      <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-sm">Get Started</a>
+    }
+  </div>
+</nav>
+
+<!-- ALERTS (TempData) -->
+@if (TempData["Success"] != null)
+{
+  <div style="position:fixed;top:80px;right:20px;z-index:9999;max-width:360px">
+    <div class="alert alert-success animate-fadeInUp">
+      ✅ @TempData["Success"]
+    </div>
+  </div>
+}
+@if (TempData["Error"] != null)
+{
+  <div style="position:fixed;top:80px;right:20px;z-index:9999;max-width:360px">
+    <div class="alert alert-error animate-fadeInUp">
+      ❌ @TempData["Error"]
+    </div>
+  </div>
+}
+
+<!-- MAIN CONTENT -->
+<main>
+  @RenderBody()
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2024 <strong>JobPortal</strong> — Built with ❤️ using ASP.NET Core 8</p>
+  <p style="margin-top:6px">
+    <a asp-controller="Jobs" asp-action="Index">Browse Jobs</a> ·
+    <a asp-controller="Account" asp-action="Register">Register</a> ·
+    <a asp-controller="Account" asp-action="Login">Login</a>
+  </p>
+</footer>
+
+<script>
+  // Auto-dismiss toast after 4s
+  setTimeout(() => {
+    document.querySelectorAll('.alert').forEach(el => {
+      el.style.transition = 'opacity 0.5s';
+      el.style.opacity = '0';
+      setTimeout(() => el.parentElement?.remove(), 500);
+    });
+  }, 4000);
+
+  // File drag-drop
+  document.querySelectorAll('.file-drop').forEach(zone => {
+    zone.addEventListener('click', () => zone.querySelector('input[type=file]')?.click());
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); zone.classList.remove('dragover');
+      const input = zone.querySelector('input[type=file]');
+      if (input && e.dataTransfer.files.length) {
+        input.files = e.dataTransfer.files;
+        zone.querySelector('p').textContent = e.dataTransfer.files[0].name;
+      }
+    });
+    const input = zone.querySelector('input[type=file]');
+    if (input) input.addEventListener('change', () => {
+      if (input.files.length) zone.querySelector('p').textContent = input.files[0].name;
+    });
+  });
+
+  // Role selector company field toggle
+  const roleRadios = document.querySelectorAll('input[name="Role"]');
+  const companyField = document.getElementById('company-field');
+  function toggleCompanyField() {
+    if (!companyField) return;
+    const selected = document.querySelector('input[name="Role"]:checked');
+    companyField.style.display = selected?.value === '1' ? 'block' : 'none';
+  }
+  roleRadios.forEach(r => r.addEventListener('change', toggleCompanyField));
+  toggleCompanyField();
+</script>
+
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

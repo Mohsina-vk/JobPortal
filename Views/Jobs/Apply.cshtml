@@ -1,0 +1,74 @@
+@model JobPortal.Models.ViewModels.ApplyJobViewModel
+@{
+  ViewData["Title"] = "Apply — " + Model.Job.Title;
+}
+
+<section class="section">
+  <div class="container">
+    <div style="max-width:680px;margin:0 auto">
+      <a asp-controller="Jobs" asp-action="Detail" asp-route-id="@Model.JobId" style="color:var(--text-muted);font-size:0.85rem">← Back to Job</a>
+
+      <div class="page-header">
+        <h1>Apply for Position</h1>
+        <p>@Model.Job.Title &nbsp;·&nbsp; @Model.Job.CompanyName</p>
+      </div>
+
+      <!-- Job Quick Info -->
+      <div class="card mb-3" style="background:rgba(108,99,255,0.05);border-color:rgba(108,99,255,0.2)">
+        <div class="job-badges">
+          <span class="badge badge-type">@Model.Job.JobTypeDisplay</span>
+          <span class="badge badge-location">📍 @Model.Job.Location</span>
+          @if (!string.IsNullOrEmpty(Model.Job.SalaryRange))
+          {
+            <span class="badge badge-salary">💰 @Model.Job.SalaryRange</span>
+          }
+        </div>
+      </div>
+
+      <div class="card">
+        <form asp-action="Apply" method="post" enctype="multipart/form-data">
+          @Html.AntiForgeryToken()
+          <input type="hidden" asp-for="JobId" />
+          <div asp-validation-summary="ModelOnly" class="validation-summary-errors mb-2"></div>
+
+          <!-- Cover Letter -->
+          <div class="form-group">
+            <label class="form-label">Cover Letter <span style="color:var(--text-muted)">(optional)</span></label>
+            <textarea asp-for="CoverLetter" class="form-control" style="min-height:200px"
+              placeholder="Introduce yourself and explain why you're a great fit for this role..."></textarea>
+          </div>
+
+          <!-- Resume Upload -->
+          <div class="form-group">
+            <label class="form-label">Resume</label>
+
+            @if (!string.IsNullOrEmpty(Model.ExistingResumeFileName))
+            {
+              <div class="alert alert-info mb-2">
+                📎 You have an existing resume on file.
+                <label class="form-check" style="display:inline-flex;margin-left:12px">
+                  <input type="checkbox" asp-for="UseExistingResume" />
+                  <span style="font-size:0.85rem">Use existing resume</span>
+                </label>
+              </div>
+            }
+
+            <div class="file-drop" id="resume-drop">
+              <input type="file" asp-for="Resume" accept=".pdf,.doc,.docx" />
+              <div class="icon">📄</div>
+              <p>Click or drag & drop your resume here<br/>
+                <small>PDF, DOC, DOCX · Max 5 MB</small>
+              </p>
+            </div>
+            <span asp-validation-for="Resume" class="field-validation-error"></span>
+          </div>
+
+          <div class="flex-between mt-3">
+            <a asp-controller="Jobs" asp-action="Detail" asp-route-id="@Model.JobId" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary btn-lg">Submit Application 🚀</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

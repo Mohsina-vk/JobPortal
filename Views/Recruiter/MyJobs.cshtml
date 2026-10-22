@@ -1,0 +1,93 @@
+@model List<JobPortal.Models.Job>
+@{
+  ViewData["Title"] = "My Jobs";
+}
+
+<section class="section">
+  <div class="container">
+    <div class="page-header">
+      <div class="flex-between">
+        <div>
+          <h1>💼 My Job Postings</h1>
+          <p>@Model.Count job(s) posted · @Model.Count(j => j.IsActive) active</p>
+        </div>
+        <a asp-controller="Recruiter" asp-action="PostJob" class="btn btn-primary">+ Post New Job</a>
+      </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+      <div class="empty-state">
+        <div class="icon">📭</div>
+        <h3>You haven't posted any jobs yet</h3>
+        <p>Post your first job to start receiving applications</p>
+        <a asp-controller="Recruiter" asp-action="PostJob" class="btn btn-primary mt-2">Post a Job →</a>
+      </div>
+    }
+    else
+    {
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Job Title</th>
+              <th>Type</th>
+              <th>Location</th>
+              <th>Posted</th>
+              <th>Deadline</th>
+              <th>Applicants</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach (var job in Model)
+            {
+              <tr>
+                <td>
+                  <strong>@job.Title</strong>
+                  <div style="font-size:0.78rem;color:var(--text-muted)">@job.Category</div>
+                </td>
+                <td><span class="badge badge-type">@job.JobTypeDisplay</span></td>
+                <td style="color:var(--text-muted)">@job.Location</td>
+                <td style="color:var(--text-muted)">@job.PostedAt.ToString("MMM d, yyyy")</td>
+                <td style="color:@(job.Deadline.HasValue && job.Deadline < DateTime.UtcNow ? "var(--danger)" : "var(--text-muted)")">
+                  @(job.Deadline?.ToString("MMM d, yyyy") ?? "—")
+                </td>
+                <td>
+                  <a asp-controller="Recruiter" asp-action="Applicants" asp-route-jobId="@job.Id"
+                     style="color:var(--primary-light);font-weight:600">
+                    @job.Applications.Count 👥
+                  </a>
+                </td>
+                <td>
+                  @if (job.IsActive)
+                  {<span class="badge badge-accepted">● Active</span>}
+                  else
+                  {<span class="badge badge-rejected">● Inactive</span>}
+                </td>
+                <td>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <a asp-controller="Recruiter" asp-action="Applicants" asp-route-jobId="@job.Id" class="btn btn-sm btn-outline">👥 Applicants</a>
+                    <a asp-controller="Recruiter" asp-action="EditJob" asp-route-id="@job.Id" class="btn btn-sm btn-outline">✏️ Edit</a>
+                    <form asp-action="ToggleActive" asp-route-id="@job.Id" method="post" style="display:inline">
+                      @Html.AntiForgeryToken()
+                      <button type="submit" class="btn btn-sm @(job.IsActive ? "btn-outline" : "btn-success")">
+                        @(job.IsActive ? "Deactivate" : "Activate")
+                      </button>
+                    </form>
+                    <form asp-action="DeleteJob" asp-route-id="@job.Id" method="post" style="display:inline"
+                          onsubmit="return confirm('Delete this job? All applications will also be deleted.')">
+                      @Html.AntiForgeryToken()
+                      <button type="submit" class="btn btn-sm btn-danger">🗑️ Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</section>

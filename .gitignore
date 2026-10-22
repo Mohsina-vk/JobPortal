@@ -1,0 +1,12 @@
+﻿/Git/
+bin/
+obj/
+.vs/
+appsettings.Development.json
+*.db
+*.mdf
+*.ldf
+*.user
+*.suo
+
+EmailPickup/

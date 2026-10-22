@@ -1,0 +1,124 @@
+@model JobPortal.Models.ViewModels.RecruiterDashboardViewModel
+@{
+  ViewData["Title"] = "Recruiter Dashboard";
+}
+
+<section class="section">
+  <div class="container">
+    <div class="page-header">
+      <div class="flex-between">
+        <div>
+          <h1>🏢 Recruiter Dashboard</h1>
+          <p>Welcome back, @Model.User.FullName — @(Model.User.CompanyName ?? "Your Company")</p>
+        </div>
+        <a asp-controller="Recruiter" asp-action="PostJob" class="btn btn-primary">+ Post New Job</a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem">
+      <div class="stat-card">
+        <div class="stat-card-icon purple">💼</div>
+        <div>
+          <div class="stat-card-value">@Model.TotalJobs</div>
+          <div class="stat-card-label">Total Jobs Posted</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon green">✅</div>
+        <div>
+          <div class="stat-card-value">@Model.ActiveJobs</div>
+          <div class="stat-card-label">Active Jobs</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon blue">👥</div>
+        <div>
+          <div class="stat-card-value">@Model.TotalApplications</div>
+          <div class="stat-card-label">Total Applicants</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon orange">⏳</div>
+        <div>
+          <div class="stat-card-value">@Model.PendingApplications</div>
+          <div class="stat-card-label">Pending Review</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem">
+      <!-- Recent Jobs -->
+      <div>
+        <div class="flex-between mb-2">
+          <h2 style="font-size:1rem;font-weight:700">My Recent Jobs</h2>
+          <a asp-controller="Recruiter" asp-action="MyJobs" style="font-size:0.85rem;color:var(--primary-light)">View all →</a>
+        </div>
+        @if (!Model.RecentJobs.Any())
+        {
+          <div class="empty-state"><div class="icon">📭</div><h3>No jobs posted yet</h3></div>
+        }
+        else
+        {
+          <div style="display:flex;flex-direction:column;gap:0.75rem">
+            @foreach (var job in Model.RecentJobs)
+            {
+              <div class="card" style="padding:1rem">
+                <div class="flex-between">
+                  <div>
+                    <div style="font-weight:600;font-size:0.92rem">@job.Title</div>
+                    <div style="font-size:0.78rem;color:var(--text-muted)">@job.Applications.Count applicant(s) · @job.PostedAt.ToString("MMM d")</div>
+                  </div>
+                  @if (job.IsActive) {
+                    <span class="badge badge-accepted" style="font-size:0.7rem">Active</span>
+                  } else {
+                    <span class="badge badge-rejected" style="font-size:0.7rem">Inactive</span>
+                  }
+                </div>
+                <div style="margin-top:10px;display:flex;gap:6px">
+                  <a asp-controller="Recruiter" asp-action="Applicants" asp-route-jobId="@job.Id" class="btn btn-sm btn-outline">👥 Applicants</a>
+                  <a asp-controller="Recruiter" asp-action="EditJob" asp-route-id="@job.Id" class="btn btn-sm btn-outline">✏️ Edit</a>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Recent Applications -->
+      <div>
+        <div class="flex-between mb-2">
+          <h2 style="font-size:1rem;font-weight:700">Recent Applicants</h2>
+        </div>
+        @if (!Model.RecentApplications.Any())
+        {
+          <div class="empty-state"><div class="icon">📭</div><h3>No applicants yet</h3></div>
+        }
+        else
+        {
+          <div style="display:flex;flex-direction:column;gap:0.75rem">
+            @foreach (var app in Model.RecentApplications)
+            {
+              var sc = app.Status switch {
+                JobPortal.Models.ApplicationStatus.Accepted => "badge-accepted",
+                JobPortal.Models.ApplicationStatus.Rejected => "badge-rejected",
+                JobPortal.Models.ApplicationStatus.Shortlisted => "badge-shortlisted",
+                _ => "badge-pending"
+              };
+              <div class="card" style="padding:1rem">
+                <div class="flex-between">
+                  <div>
+                    <div style="font-weight:600;font-size:0.9rem">@app.Applicant?.FullName</div>
+                    <div style="font-size:0.78rem;color:var(--text-muted)">For: @app.Job?.Title</div>
+                  </div>
+                  <span class="badge @sc">@app.Status</span>
+                </div>
+                <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">@app.AppliedAt.ToString("MMM d, yyyy")</div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

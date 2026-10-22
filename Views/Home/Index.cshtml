@@ -1,0 +1,147 @@
+@using JobPortal.Models
+@model dynamic
+@{
+  ViewData["Title"] = "Find Your Dream Job";
+  var featuredJobs = ViewBag.FeaturedJobs as List<Job> ?? new List<Job>();
+  var totalJobs = (int)(ViewBag.TotalJobs ?? 0);
+  var totalCompanies = (int)(ViewBag.TotalCompanies ?? 0);
+  var totalApplications = (int)(ViewBag.TotalApplications ?? 0);
+}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge animate-fadeInUp">
+      🚀 &nbsp;#1 Job Platform for Tech Professionals
+    </div>
+    <h1 class="animate-fadeInUp-delay-1">
+      Find Your <span class="gradient-text">Dream Job</span><br/>or Your Next Star Hire
+    </h1>
+    <p class="animate-fadeInUp-delay-2">
+      Connect with top companies and talented professionals. Browse thousands of opportunities across every industry.
+    </p>
+    <form asp-controller="Jobs" asp-action="Index" method="get" class="animate-fadeInUp-delay-2">
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" name="Keyword" placeholder="Job title, skill, or company..." />
+        <input type="text" name="Location" placeholder="Location..." style="border-left:1px solid var(--border);padding-left:14px;margin-left:4px" />
+        <button type="submit" class="btn btn-primary">Search Jobs</button>
+      </div>
+    </form>
+    <div class="stats-row animate-fadeInUp-delay-3">
+      <div class="stat-item">
+        <div class="number">@totalJobs+</div>
+        <div class="label">Active Jobs</div>
+      </div>
+      <div class="stat-item">
+        <div class="number">@totalCompanies+</div>
+        <div class="label">Companies</div>
+      </div>
+      <div class="stat-item">
+        <div class="number">@totalApplications+</div>
+        <div class="label">Applications</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED JOBS -->
+<section class="section">
+  <div class="container">
+    <div class="flex-between mb-3">
+      <div>
+        <h2 class="section-title">Featured Jobs</h2>
+        <p class="section-subtitle">Latest opportunities from top companies</p>
+      </div>
+      <a asp-controller="Jobs" asp-action="Index" class="btn btn-outline">View All Jobs →</a>
+    </div>
+
+    @if (!featuredJobs.Any())
+    {
+      <div class="empty-state">
+        <div class="icon">💼</div>
+        <h3>No jobs posted yet</h3>
+        <p>Be the first to post a job!</p>
+      </div>
+    }
+    else
+    {
+      <div class="grid-3">
+        @foreach (var job in featuredJobs)
+        {
+          <a asp-controller="Jobs" asp-action="Detail" asp-route-id="@job.Id" style="text-decoration:none;color:inherit">
+            <div class="job-card">
+              <div class="flex-between mb-1">
+                <div class="job-card-title">@job.Title</div>
+                <span style="font-size:0.75rem;color:var(--text-muted)">@job.PostedAt.ToString("MMM d")</span>
+              </div>
+              <div class="job-card-company">🏢 @job.CompanyName</div>
+              <div class="job-badges">
+                <span class="badge badge-type">@job.JobTypeDisplay</span>
+                <span class="badge badge-location">📍 @job.Location</span>
+                @if (!string.IsNullOrEmpty(job.SalaryRange))
+                {
+                  <span class="badge badge-salary">💰 @job.SalaryRange</span>
+                }
+                <span class="badge badge-category">@job.Category</span>
+              </div>
+              @if (!string.IsNullOrEmpty(job.RequiredSkills))
+              {
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:8px">
+                  🛠️ @(job.RequiredSkills.Length > 60 ? job.RequiredSkills.Substring(0, 60) + "…" : job.RequiredSkills)
+                </div>
+              }
+              <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:0.78rem;color:var(--text-muted)">@job.Applications.Count applicant(s)</span>
+                <span class="btn btn-primary btn-sm">Apply Now</span>
+              </div>
+            </div>
+          </a>
+        }
+      </div>
+    }
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" style="background:var(--bg-surface);margin: 0 -0px">
+  <div class="container">
+    <h2 class="section-title text-center mb-1">How It Works</h2>
+    <p class="section-subtitle text-center mb-3">Get started in 3 simple steps</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:2rem;text-align:center;margin-top:2rem">
+      @{
+        var steps = new[] {
+          ("🔐", "Create Account", "Register as a Job Seeker or Recruiter. Free and takes less than a minute."),
+          ("🔍", "Find or Post Jobs", "Browse thousands of jobs or post your opening to reach qualified candidates."),
+          ("🚀", "Apply & Get Hired", "Submit your application, track status, and land your dream role.")
+        };
+      }
+      @foreach (var (icon, title, desc) in steps)
+      {
+        <div class="card" style="text-align:center">
+          <div style="font-size:2.5rem;margin-bottom:12px">@icon</div>
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px">@title</h3>
+          <p style="font-size:0.85rem;color:var(--text-secondary)">@desc</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+@if (!User.Identity?.IsAuthenticated == true)
+{
+  <section class="section">
+    <div class="container text-center">
+      <div class="card" style="max-width:600px;margin:0 auto;background:linear-gradient(135deg,rgba(108,99,255,0.12),rgba(59,130,246,0.08));border-color:rgba(108,99,255,0.3)">
+        <h2 style="font-size:1.6rem;font-weight:800;margin-bottom:12px">Ready to get started?</h2>
+        <p style="color:var(--text-secondary);margin-bottom:24px">Join thousands of professionals and companies on JobPortal today.</p>
+        <div class="flex-center gap-2" style="justify-content:center">
+          <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg">Create Free Account</a>
+          <a asp-controller="Jobs" asp-action="Index" class="btn btn-outline btn-lg">Browse Jobs</a>
+        </div>
+      </div>
+    </div>
+  </section>
+}

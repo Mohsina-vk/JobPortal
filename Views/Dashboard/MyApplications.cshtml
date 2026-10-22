@@ -1,0 +1,78 @@
+@model JobPortal.Models.ViewModels.MyApplicationsViewModel
+@using JobPortal.Models
+@{
+  ViewData["Title"] = "My Applications";
+}
+
+<section class="section">
+  <div class="container">
+    <div class="page-header">
+      <h1>📋 My Applications</h1>
+      <p>Track the status of all your job applications</p>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.5rem">
+      <a href="?statusFilter=" class="btn btn-sm @(string.IsNullOrEmpty(Model.StatusFilter) ? "btn-primary" : "btn-outline")">All</a>
+      @foreach (var status in Enum.GetValues<ApplicationStatus>())
+      {
+        <a href="?statusFilter=@status" class="btn btn-sm @(Model.StatusFilter == status.ToString() ? "btn-primary" : "btn-outline")">@status</a>
+      }
+    </div>
+
+    @if (!Model.Applications.Any())
+    {
+      <div class="empty-state">
+        <div class="icon">📭</div>
+        <h3>No applications found</h3>
+        <p>Start exploring jobs and apply!</p>
+        <a asp-controller="Jobs" asp-action="Index" class="btn btn-primary mt-2">Browse Jobs</a>
+      </div>
+    }
+    else
+    {
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Job Title</th>
+              <th>Company</th>
+              <th>Location</th>
+              <th>Applied On</th>
+              <th>Status</th>
+              <th>Resume</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach (var app in Model.Applications)
+            {
+              var sc = app.Status switch {
+                ApplicationStatus.Accepted => "badge-accepted",
+                ApplicationStatus.Rejected => "badge-rejected",
+                ApplicationStatus.Shortlisted => "badge-shortlisted",
+                ApplicationStatus.UnderReview => "badge-underreview",
+                _ => "badge-pending"
+              };
+              <tr>
+                <td><strong>@app.Job?.Title</strong></td>
+                <td style="color:var(--text-muted)">@app.Job?.CompanyName</td>
+                <td style="color:var(--text-muted)">@app.Job?.Location</td>
+                <td style="color:var(--text-muted)">@app.AppliedAt.ToString("MMM d, yyyy")</td>
+                <td><span class="badge @sc">@app.Status</span></td>
+                <td>
+                  @if (!string.IsNullOrEmpty(app.ResumeFileName))
+                  {
+                    <a href="/uploads/resumes/@app.ResumeFileName" target="_blank" class="btn btn-sm btn-outline">📄 View</a>
+                  }
+                  else { <span style="color:var(--text-muted)">—</span> }
+                </td>
+                <td><a asp-controller="Jobs" asp-action="Detail" asp-route-id="@app.JobId" class="btn btn-sm btn-outline">View Job</a></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</section>

@@ -1,0 +1,146 @@
+@model JobPortal.Models.ViewModels.JobSearchViewModel
+@using JobPortal.Models
+@{
+  ViewData["Title"] = "Browse Jobs";
+}
+
+<section class="section">
+  <div class="container">
+    <div class="page-layout">
+
+      <!-- SIDEBAR FILTERS -->
+      <aside class="sidebar">
+        <form asp-controller="Jobs" asp-action="Index" method="get" id="filter-form">
+          <div class="sidebar-title">🔍 Filter Jobs</div>
+
+          <div class="form-group">
+            <label class="form-label">Keyword</label>
+            <input type="text" name="Keyword" value="@Model.Keyword" class="form-control" placeholder="Title, skill, company…" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input type="text" name="Location" value="@Model.Location" class="form-control" placeholder="City or Remote" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Job Type</label>
+            <select name="JobType" class="form-control">
+              <option value="">All Types</option>
+              @foreach (var jt in Enum.GetValues<JobType>())
+              {
+                <option value="@((int)jt)" selected="@(Model.JobType == jt)">@jt</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select name="Category" class="form-control">
+              <option value="">All Categories</option>
+              @foreach (var cat in Enum.GetValues<JobCategory>())
+              {
+                <option value="@((int)cat)" selected="@(Model.Category == cat)">@cat</option>
+              }
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+          <a asp-controller="Jobs" asp-action="Index" class="btn btn-outline w-100 mt-1">Clear All</a>
+        </form>
+      </aside>
+
+      <!-- JOB LISTINGS -->
+      <div>
+        <div class="flex-between mb-3">
+          <div>
+            <h1 style="font-size:1.4rem;font-weight:800">
+              @if (!string.IsNullOrEmpty(Model.Keyword))
+              { <span>Results for "@Model.Keyword"</span> }
+              else
+              { <span>All Jobs</span> }
+            </h1>
+            <p style="color:var(--text-muted);font-size:0.85rem">@Model.TotalCount job(s) found</p>
+          </div>
+          @if (User.IsInRole("Recruiter"))
+          {
+            <a asp-controller="Recruiter" asp-action="PostJob" class="btn btn-primary btn-sm">+ Post a Job</a>
+          }
+        </div>
+
+        @if (!Model.Jobs.Any())
+        {
+          <div class="empty-state">
+            <div class="icon">🔍</div>
+            <h3>No jobs found</h3>
+            <p>Try adjusting your search filters</p>
+          </div>
+        }
+        else
+        {
+          <div style="display:flex;flex-direction:column;gap:1rem">
+            @foreach (var job in Model.Jobs)
+            {
+              <div class="job-card">
+                <div class="flex-between">
+                  <div>
+                    <div class="job-card-title">
+                      <a asp-controller="Jobs" asp-action="Detail" asp-route-id="@job.Id" style="color:inherit">@job.Title</a>
+                    </div>
+                    <div class="job-card-company">🏢 @job.CompanyName &nbsp;·&nbsp; 📍 @job.Location</div>
+                  </div>
+                  <span style="font-size:0.78rem;color:var(--text-muted);white-space:nowrap">@job.PostedAt.ToString("MMM d, yyyy")</span>
+                </div>
+
+                <div class="job-badges mt-1">
+                  <span class="badge badge-type">@job.JobTypeDisplay</span>
+                  <span class="badge badge-category">@job.Category</span>
+                  @if (!string.IsNullOrEmpty(job.SalaryRange))
+                  {
+                    <span class="badge badge-salary">💰 @job.SalaryRange</span>
+                  }
+                  @if (job.ExperienceYears.HasValue)
+                  {
+                    <span class="badge badge-location">@job.ExperienceYears+ yrs exp</span>
+                  }
+                </div>
+
+                @if (!string.IsNullOrEmpty(job.RequiredSkills))
+                {
+                  <p style="font-size:0.82rem;color:var(--text-muted);margin:8px 0">
+                    🛠️ @(job.RequiredSkills.Length > 80 ? job.RequiredSkills.Substring(0, 80) + "…" : job.RequiredSkills)
+                  </p>
+                }
+
+                <div class="flex-between mt-2" style="padding-top:12px;border-top:1px solid var(--border)">
+                  <span style="font-size:0.78rem;color:var(--text-muted)">
+                    @job.Applications.Count applicant(s)
+                    @if (job.Deadline.HasValue)
+                    {
+                      <span> · Deadline: @job.Deadline.Value.ToString("MMM d")</span>
+                    }
+                  </span>
+                  <a asp-controller="Jobs" asp-action="Detail" asp-route-id="@job.Id" class="btn btn-primary btn-sm">
+                    View & Apply →
+                  </a>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- PAGINATION -->
+          @if (Model.TotalPages > 1)
+          {
+            <div class="pagination">
+              @for (int p = 1; p <= Model.TotalPages; p++)
+              {
+                <a href="?Keyword=@Model.Keyword&Location=@Model.Location&JobType=@Model.JobType&Category=@Model.Category&Page=@p"
+                   class="page-btn @(Model.Page == p ? "active" : "")">@p</a>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+</section>

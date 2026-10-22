@@ -1,0 +1,111 @@
+@model JobPortal.Models.ViewModels.ApplicantsViewModel
+@using JobPortal.Models
+@{
+  ViewData["Title"] = "Applicants — " + Model.Job.Title;
+}
+
+<section class="section">
+  <div class="container">
+    <a asp-controller="Recruiter" asp-action="MyJobs" style="color:var(--text-muted);font-size:0.85rem">← Back to My Jobs</a>
+
+    <div class="page-header">
+      <div class="flex-between">
+        <div>
+          <h1>👥 Applicants for: @Model.Job.Title</h1>
+          <p>@Model.Applications.Count applicant(s) · @Model.Job.CompanyName · @Model.Job.Location</p>
+        </div>
+        <a asp-controller="Jobs" asp-action="Detail" asp-route-id="@Model.Job.Id" class="btn btn-outline btn-sm">View Job Post</a>
+      </div>
+    </div>
+
+    <!-- Status Filter -->
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.5rem">
+      <a href="?jobId=@Model.Job.Id&statusFilter=" class="btn btn-sm @(string.IsNullOrEmpty(Model.StatusFilter) ? "btn-primary" : "btn-outline")">All</a>
+      @foreach (var status in Enum.GetValues<ApplicationStatus>())
+      {
+        <a href="?jobId=@Model.Job.Id&statusFilter=@status" class="btn btn-sm @(Model.StatusFilter == status.ToString() ? "btn-primary" : "btn-outline")">@status</a>
+      }
+    </div>
+
+    @if (!Model.Applications.Any())
+    {
+      <div class="empty-state">
+        <div class="icon">📭</div>
+        <h3>No applicants yet</h3>
+        <p>Applications will appear here once candidates apply</p>
+      </div>
+    }
+    else
+    {
+      <div style="display:flex;flex-direction:column;gap:1rem">
+        @foreach (var app in Model.Applications)
+        {
+          var sc = app.Status switch {
+            ApplicationStatus.Accepted => "badge-accepted",
+            ApplicationStatus.Rejected => "badge-rejected",
+            ApplicationStatus.Shortlisted => "badge-shortlisted",
+            ApplicationStatus.UnderReview => "badge-underreview",
+            _ => "badge-pending"
+          };
+          <div class="card">
+            <div class="flex-between mb-2">
+              <div class="flex-center gap-2">
+                <div class="user-avatar" style="width:40px;height:40px;font-size:0.9rem">
+                  @app.Applicant?.FullName?.Substring(0,1).ToUpper()
+                </div>
+                <div>
+                  <div style="font-weight:700">@app.Applicant?.FullName</div>
+                  <div style="font-size:0.82rem;color:var(--text-muted)">
+                    @app.Applicant?.Email &nbsp;·&nbsp; Applied @app.AppliedAt.ToString("MMM d, yyyy")
+                  </div>
+                </div>
+              </div>
+              <span class="badge @sc" style="font-size:0.8rem">@app.Status</span>
+            </div>
+
+            @if (!string.IsNullOrEmpty(app.CoverLetter))
+            {
+              <div style="background:var(--bg-elevated);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;font-size:0.85rem;color:var(--text-secondary);line-height:1.7">
+                <strong style="color:var(--text-primary);font-size:0.8rem">📝 Cover Letter:</strong><br/>
+                @(app.CoverLetter.Length > 300 ? app.CoverLetter.Substring(0, 300) + "..." : app.CoverLetter)
+              </div>
+            }
+
+            <div class="flex-between flex-wrap gap-2">
+              <div class="flex-center gap-2">
+                @if (!string.IsNullOrEmpty(app.ResumeFileName))
+                {
+                  <a href="/uploads/resumes/@app.ResumeFileName" target="_blank" class="btn btn-sm btn-outline">📄 Download Resume</a>
+                }
+                else { <span style="font-size:0.82rem;color:var(--text-muted)">No resume uploaded</span> }
+
+                @if (!string.IsNullOrEmpty(app.Applicant?.Location))
+                {
+                  <span style="font-size:0.82rem;color:var(--text-muted)">📍 @app.Applicant.Location</span>
+                }
+              </div>
+
+              <!-- Status Update Form -->
+              <form asp-controller="Recruiter" asp-action="UpdateStatus" method="post" class="flex-center gap-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="applicationId" value="@app.Id" />
+                <select name="status" class="form-control" style="width:auto;padding:6px 12px;font-size:0.82rem">
+                  @foreach (var status in Enum.GetValues<ApplicationStatus>())
+                  {
+                    <option value="@status" selected="@(app.Status == status)">@status</option>
+                  }
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">Update</button>
+              </form>
+            </div>
+
+            @if (!string.IsNullOrEmpty(app.RecruiterNotes))
+            {
+              <div style="margin-top:10px;font-size:0.8rem;color:var(--text-muted)">📌 Note: @app.RecruiterNotes</div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>

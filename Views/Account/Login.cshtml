@@ -1,0 +1,59 @@
+@model JobPortal.Models.ViewModels.LoginViewModel
+@{
+  ViewData["Title"] = "Sign In";
+}
+
+<section class="section">
+  <div class="container">
+    <div style="max-width:420px;margin:0 auto">
+      <div class="text-center mb-3">
+        <div style="font-size:2.5rem;margin-bottom:8px">🔐</div>
+        <h1 style="font-size:1.8rem;font-weight:800">Welcome Back</h1>
+        <p style="color:var(--text-secondary);margin-top:6px">Sign in to your JobPortal account</p>
+      </div>
+
+      <div class="card">
+        <form asp-action="Login" method="post">
+          @Html.AntiForgeryToken()
+          <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+          <div asp-validation-summary="ModelOnly" class="validation-summary-errors mb-2"></div>
+
+          <div class="form-group">
+            <label asp-for="Email" class="form-label">Email Address</label>
+            <input asp-for="Email" class="form-control" placeholder="you@example.com" type="email" />
+            <span asp-validation-for="Email" class="field-validation-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label asp-for="Password" class="form-label">Password</label>
+            <input asp-for="Password" class="form-control" type="password" placeholder="Your password" />
+            <span asp-validation-for="Password" class="field-validation-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-check">
+              <input asp-for="RememberMe" type="checkbox" />
+              <span style="font-size:0.88rem;color:var(--text-secondary)">Remember me for 7 days</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">Sign In →</button>
+        </form>
+
+        <div class="divider"></div>
+
+        <div class="text-center" style="background:var(--bg-elevated);border-radius:var(--radius-sm);padding:12px;font-size:0.82rem;color:var(--text-muted)">
+          <strong style="color:var(--text-secondary)">Demo Accounts</strong><br/>
+          🏢 Recruiter: <code style="color:var(--primary-light)">recruiter@techcorp.com</code> / <code>Recruiter@123</code><br/>
+          👤 Seeker: <code style="color:var(--accent2)">seeker@example.com</code> / <code>Seeker@123</code>
+        </div>
+
+        <div class="divider"></div>
+        <p class="text-center text-sm" style="color:var(--text-muted)">
+          Don't have an account?
+          <a asp-controller="Account" asp-action="Register">Create one free</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

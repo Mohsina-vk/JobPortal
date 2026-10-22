@@ -1,0 +1,167 @@
+@model JobPortal.Models.ViewModels.JobDetailViewModel
+@using JobPortal.Models
+@{
+  ViewData["Title"] = Model.Job.Title;
+  var job = Model.Job;
+}
+
+<section class="section">
+  <div class="container">
+    <div class="page-layout">
+
+      <!-- MAIN CONTENT -->
+      <div style="grid-column:1/-1">
+        <a asp-controller="Jobs" asp-action="Index" style="color:var(--text-muted);font-size:0.85rem">← Back to Jobs</a>
+      </div>
+
+      <div style="grid-column:1/2">
+
+        <!-- JOB HEADER CARD -->
+        <div class="card mb-3" style="background:linear-gradient(135deg,rgba(108,99,255,0.08),rgba(59,130,246,0.05));border-color:rgba(108,99,255,0.25)">
+          <div class="flex-between mb-2">
+            <div>
+              <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:4px">@job.Title</h1>
+              <div style="color:var(--text-secondary);font-size:0.95rem">🏢 @job.CompanyName</div>
+            </div>
+            @if (job.IsActive)
+            {
+              <span class="badge badge-accepted" style="font-size:0.75rem">● Active</span>
+            }
+            else
+            {
+              <span class="badge badge-rejected" style="font-size:0.75rem">Closed</span>
+            }
+          </div>
+
+          <div class="job-badges" style="margin-bottom:0">
+            <span class="badge badge-location">📍 @job.Location</span>
+            <span class="badge badge-type">@job.JobTypeDisplay</span>
+            <span class="badge badge-category">@job.Category</span>
+            @if (!string.IsNullOrEmpty(job.SalaryRange))
+            {
+              <span class="badge badge-salary">💰 @job.SalaryRange</span>
+            }
+            @if (job.ExperienceYears.HasValue)
+            {
+              <span class="badge badge-location">🎓 @job.ExperienceYears+ years exp</span>
+            }
+          </div>
+        </div>
+
+        <!-- DESCRIPTION -->
+        <div class="card mb-3">
+          <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem">📋 Job Description</h2>
+          <div style="color:var(--text-secondary);font-size:0.92rem;line-height:1.8;white-space:pre-line">@job.Description</div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(job.RequiredSkills))
+        {
+          <div class="card mb-3">
+            <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem">🛠️ Required Skills</h2>
+            <div class="job-badges">
+              @foreach (var skill in job.RequiredSkills.Split(',', StringSplitOptions.RemoveEmptyEntries))
+              {
+                <span class="badge badge-type">@skill.Trim()</span>
+              }
+            </div>
+          </div>
+        }
+
+        @if (!string.IsNullOrEmpty(job.Benefits))
+        {
+          <div class="card mb-3">
+            <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem">🎁 Benefits</h2>
+            <div style="color:var(--text-secondary);font-size:0.92rem">@job.Benefits</div>
+          </div>
+        }
+      </div>
+
+      <!-- SIDEBAR -->
+      <div>
+        <!-- APPLY CARD -->
+        <div class="card mb-3" style="position:sticky;top:90px">
+          <div style="text-align:center;margin-bottom:1.5rem">
+            <div style="font-size:2rem;margin-bottom:8px">💼</div>
+            <div style="font-weight:700;margin-bottom:4px">Ready to Apply?</div>
+            <div style="font-size:0.82rem;color:var(--text-muted)">@Model.ApplicationCount applicant(s) so far</div>
+          </div>
+
+          @if (!User.Identity?.IsAuthenticated == true)
+          {
+            <a asp-controller="Account" asp-action="Login" class="btn btn-primary w-100">Login to Apply</a>
+          }
+          else if (User.IsInRole("JobSeeker"))
+          {
+            @if (Model.HasApplied)
+            {
+              <div class="alert alert-success text-center">✅ You've already applied!</div>
+              <a asp-controller="Dashboard" asp-action="MyApplications" class="btn btn-outline w-100">View My Applications</a>
+            }
+            else if (!job.IsActive)
+            {
+              <div class="alert alert-error text-center">This job is no longer accepting applications.</div>
+            }
+            else
+            {
+              <a asp-controller="Jobs" asp-action="Apply" asp-route-id="@job.Id" class="btn btn-primary w-100 btn-lg">Apply Now →</a>
+            }
+          }
+          else if (Model.IsOwner)
+          {
+            <a asp-controller="Recruiter" asp-action="EditJob" asp-route-id="@job.Id" class="btn btn-outline w-100 mb-1">✏️ Edit Job</a>
+            <a asp-controller="Recruiter" asp-action="Applicants" asp-route-jobId="@job.Id" class="btn btn-primary w-100">👥 View Applicants (@Model.ApplicationCount)</a>
+          }
+
+          <div class="divider"></div>
+
+          <!-- Job Meta -->
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:0.85rem">
+            <div class="flex-between">
+              <span style="color:var(--text-muted)">Posted</span>
+              <span>@job.PostedAt.ToString("MMMM d, yyyy")</span>
+            </div>
+            @if (job.Deadline.HasValue)
+            {
+              <div class="flex-between">
+                <span style="color:var(--text-muted)">Deadline</span>
+                <span style="color:var(--warning)">@job.Deadline.Value.ToString("MMMM d, yyyy")</span>
+              </div>
+            }
+            <div class="flex-between">
+              <span style="color:var(--text-muted)">Job Type</span>
+              <span>@job.JobTypeDisplay</span>
+            </div>
+            <div class="flex-between">
+              <span style="color:var(--text-muted)">Category</span>
+              <span>@job.Category</span>
+            </div>
+            @if (!string.IsNullOrEmpty(job.SalaryRange))
+            {
+              <div class="flex-between">
+                <span style="color:var(--text-muted)">Salary</span>
+                <span style="color:var(--accent2)">@job.SalaryRange</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Company info -->
+        @if (job.Recruiter != null)
+        {
+          <div class="card">
+            <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:12px">🏢 About the Company</h3>
+            <div style="font-weight:600">@job.CompanyName</div>
+            @if (!string.IsNullOrEmpty(job.Recruiter.CompanyDescription))
+            {
+              <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:8px">@job.Recruiter.CompanyDescription</p>
+            }
+            @if (!string.IsNullOrEmpty(job.Recruiter.Location))
+            {
+              <div style="font-size:0.82rem;color:var(--text-muted);margin-top:8px">📍 @job.Recruiter.Location</div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>
